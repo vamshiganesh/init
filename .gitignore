@@ -7,6 +7,6 @@ dist
 **/.DS_Store
 **/.vscode
 **/.idea
-scripts/
-**/scripts/
+#scripts/
+#**/scripts/
 scripts/manual-notarize.js

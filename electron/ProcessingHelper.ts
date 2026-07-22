@@ -49,6 +49,7 @@ export class ProcessingHelper {
   private openaiClient: OpenAI | null = null
   private geminiApiKey: string | null = null
   private anthropicClient: Anthropic | null = null
+  private groqClient: OpenAI | null = null
 
   // AbortControllers for API requests
   private currentProcessingAbortController: AbortController | null = null
@@ -83,17 +84,20 @@ export class ProcessingHelper {
           });
           this.geminiApiKey = null;
           this.anthropicClient = null;
+          this.groqClient = null;
           console.log("OpenAI client initialized successfully");
         } else {
           this.openaiClient = null;
           this.geminiApiKey = null;
           this.anthropicClient = null;
+          this.groqClient = null;
           console.warn("No API key available, OpenAI client not initialized");
         }
       } else if (config.apiProvider === "gemini"){
         // Gemini client initialization
         this.openaiClient = null;
         this.anthropicClient = null;
+        this.groqClient = null;
         if (config.apiKey) {
           this.geminiApiKey = config.apiKey;
           console.log("Gemini API key set successfully");
@@ -101,12 +105,14 @@ export class ProcessingHelper {
           this.openaiClient = null;
           this.geminiApiKey = null;
           this.anthropicClient = null;
+          this.groqClient = null;
           console.warn("No API key available, Gemini client not initialized");
         }
       } else if (config.apiProvider === "anthropic") {
         // Reset other clients
         this.openaiClient = null;
         this.geminiApiKey = null;
+        this.groqClient = null;
         if (config.apiKey) {
           this.anthropicClient = new Anthropic({
             apiKey: config.apiKey,
@@ -118,7 +124,28 @@ export class ProcessingHelper {
           this.openaiClient = null;
           this.geminiApiKey = null;
           this.anthropicClient = null;
+          this.groqClient = null;
           console.warn("No API key available, Anthropic client not initialized");
+        }
+      } else if (config.apiProvider === "groq") {
+        // Reset other clients
+        this.openaiClient = null;
+        this.geminiApiKey = null;
+        this.anthropicClient = null;
+        if (config.apiKey) {
+          this.groqClient = new OpenAI({
+            apiKey: config.apiKey,
+            baseURL: "https://api.groq.com/openai/v1",
+            timeout: 60000,
+            maxRetries: 2
+          });
+          console.log("Groq client initialized successfully");
+        } else {
+          this.openaiClient = null;
+          this.geminiApiKey = null;
+          this.anthropicClient = null;
+          this.groqClient = null;
+          console.warn("No API key available, Groq client not initialized");
         }
       }
     } catch (error) {
@@ -126,6 +153,7 @@ export class ProcessingHelper {
       this.openaiClient = null;
       this.geminiApiKey = null;
       this.anthropicClient = null;
+      this.groqClient = null;
     }
   }
 
@@ -229,6 +257,17 @@ export class ProcessingHelper {
       
       if (!this.anthropicClient) {
         console.error("Anthropic client not initialized");
+        mainWindow.webContents.send(
+          this.deps.PROCESSING_EVENTS.API_KEY_INVALID
+        );
+        return;
+      }
+    } else if (config.apiProvider === "groq" && !this.groqClient) {
+      // Add check for Groq client
+      this.initializeAIClient();
+      
+      if (!this.groqClient) {
+        console.error("Groq client not initialized");
         mainWindow.webContents.send(
           this.deps.PROCESSING_EVENTS.API_KEY_INVALID
         );
@@ -495,10 +534,13 @@ export class ProcessingHelper {
         ];
 
         // Send to OpenAI Vision API
+        const modelName = config.extractionModel || "gpt-5.2";
+        const isGPT5Model = modelName.startsWith('gpt-5');
+        
         const extractionResponse = await this.openaiClient.chat.completions.create({
-          model: config.extractionModel || "gpt-4o",
+          model: modelName,
           messages: messages,
-          max_tokens: 4000,
+          ...(isGPT5Model ? { max_completion_tokens: 4000 } : { max_tokens: 4000 }),
           temperature: 0.2
         });
 
@@ -634,6 +676,12 @@ export class ProcessingHelper {
             error: "Failed to process with Anthropic API. Please check your API key or try again later."
           };
         }
+      } else if (config.apiProvider === "groq") {
+        // Groq doesn't support vision/image inputs
+        return {
+          success: false,
+          error: "Groq models don't support image analysis. Please switch to OpenAI (GPT-4o), Gemini, or Claude in Settings to analyze screenshots. Groq only supports text-based operations."
+        };
       }
       
       // Update the user on progress
@@ -774,13 +822,16 @@ Your solution should be efficient, well-commented, and handle edge cases.
         }
         
         // Send to OpenAI API
+        const modelName = config.solutionModel || "gpt-5.2";
+        const isGPT5Model = modelName.startsWith('gpt-5');
+        
         const solutionResponse = await this.openaiClient.chat.completions.create({
-          model: config.solutionModel || "gpt-4o",
+          model: modelName,
           messages: [
             { role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
             { role: "user", content: promptText }
           ],
-          max_tokens: 4000,
+          ...(isGPT5Model ? { max_completion_tokens: 4000 } : { max_tokens: 4000 }),
           temperature: 0.2
         });
 
@@ -886,6 +937,27 @@ Your solution should be efficient, well-commented, and handle edge cases.
             error: "Failed to generate solution with Anthropic API. Please check your API key or try again later."
           };
         }
+      } else if (config.apiProvider === "groq") {
+        // Groq processing (OpenAI-compatible)
+        if (!this.groqClient) {
+          return {
+            success: false,
+            error: "Groq API key not configured. Please check your settings."
+          };
+        }
+        
+        // Send to Groq API
+        const solutionResponse = await this.groqClient.chat.completions.create({
+          model: config.solutionModel || "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
+            { role: "user", content: promptText }
+          ],
+          max_tokens: 4000,
+          temperature: 0.2
+        });
+
+        responseContent = solutionResponse.choices[0].message.content;
       }
       
       // Extract parts from the response
@@ -1066,10 +1138,13 @@ If you include code examples, use proper markdown code blocks with language spec
           });
         }
 
+        const modelName = config.debuggingModel || "gpt-5.2";
+        const isGPT5Model = modelName.startsWith('gpt-5');
+        
         const debugResponse = await this.openaiClient.chat.completions.create({
-          model: config.debuggingModel || "gpt-4o",
+          model: modelName,
           messages: messages,
-          max_tokens: 4000,
+          ...(isGPT5Model ? { max_completion_tokens: 4000 } : { max_tokens: 4000 }),
           temperature: 0.2
         });
         
@@ -1244,6 +1319,12 @@ If you include code examples, use proper markdown code blocks with language spec
             error: "Failed to process debug request with Anthropic API. Please check your API key or try again later."
           };
         }
+      } else if (config.apiProvider === "groq") {
+        // Groq doesn't support vision/image inputs for debugging screenshots
+        return {
+          success: false,
+          error: "Groq models don't support image analysis for debugging. Please switch to OpenAI (GPT-4o), Gemini, or Claude in Settings to analyze debug screenshots."
+        };
       }
       
       

@@ -38,9 +38,13 @@ echo "=== Step 4: Launching in stealth mode... ==="
 echo "Remember: Cmd+B to make it visible, Cmd+[ and Cmd+] to adjust opacity!"
 echo
 export NODE_ENV=production
-npx electron ./dist-electron/main.js &
+nohup npx electron ./dist-electron/main.js > /dev/null 2>&1 &
+disown -h $! 2>/dev/null || true
 
 echo "App is now running invisibly! Press Cmd+B to make it visible."
+echo
+echo "You can safely CLOSE THIS TERMINAL - the app will keep running."
+echo "To quit the app, use Cmd+Q or stop it from Activity Monitor."
 echo
 echo "If you encounter any issues:"
 echo "1. Make sure you've installed dependencies with 'npm install'"

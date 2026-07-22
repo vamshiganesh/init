@@ -132,7 +132,13 @@ npm run clean
 
 4. Run the appropriate script for your platform:
 
-**For Windows:**
+**For Windows (recommended — no terminal stays open):**
+```bash
+# Double-click in File Explorer, or run:
+wscript stealth-run-silent.vbs
+```
+
+**For Windows (terminal — auto-closes after launch):**
 ```bash
 stealth-run.bat
 ```
@@ -142,6 +148,11 @@ stealth-run.bat
 # Make the script executable first
 chmod +x stealth-run.sh
 ./stealth-run.sh
+```
+
+**Already built? Relaunch without rebuilding (Windows, no terminal):**
+```bash
+wscript launch-stealth-silent.vbs
 ```
 
 **IMPORTANT**: The application window will be invisible by default! Use Ctrl+B (or Cmd+B on Mac) to toggle visibility.
@@ -189,6 +200,7 @@ The packaged applications will be available in the `release` directory.
   - Use Ctrl+B/Cmd+B multiple times if the window doesn't appear
   - Adjust window opacity with Ctrl+[/]/Cmd+[/] if needed
   - For macOS: ensure script has execute permissions (`chmod +x stealth-run.sh`)
+  - **Terminal visible during screen share?** Use `stealth-run-silent.vbs` (Windows) so no terminal window appears. After `stealth-run.bat` launches the app, the terminal auto-closes and the app keeps running.
 
 ## Comparison with Paid Interview Tools
 

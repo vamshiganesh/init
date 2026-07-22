@@ -7,7 +7,7 @@ import { OpenAI } from "openai"
 
 interface Config {
   apiKey: string;
-  apiProvider: "openai" | "gemini" | "anthropic";  // Added provider selection
+  apiProvider: "openai" | "gemini" | "anthropic" | "groq";  // Added provider selection
   extractionModel: string;
   solutionModel: string;
   debuggingModel: string;
@@ -58,13 +58,20 @@ export class ConfigHelper extends EventEmitter {
   /**
    * Validate and sanitize model selection to ensure only allowed models are used
    */
-  private sanitizeModelSelection(model: string, provider: "openai" | "gemini" | "anthropic"): string {
+  private sanitizeModelSelection(model: string, provider: "openai" | "gemini" | "anthropic" | "groq"): string {
     if (provider === "openai") {
-      // Only allow gpt-4o and gpt-4o-mini for OpenAI
-      const allowedModels = ['gpt-4o', 'gpt-4o-mini'];
+      // Allow GPT-4o and GPT-5 models for OpenAI
+      const allowedModels = [
+        'gpt-4o', 
+        'gpt-4o-mini',
+        'gpt-5.2',
+        'gpt-5.1',
+        'gpt-5.1-codex-max',
+        'gpt-5-mini'
+      ];
       if (!allowedModels.includes(model)) {
-        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-4o`);
-        return 'gpt-4o';
+        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-5.2`);
+        return 'gpt-5.2';
       }
       return model;
     } else if (provider === "gemini")  {
@@ -83,6 +90,21 @@ export class ConfigHelper extends EventEmitter {
         return 'claude-3-7-sonnet-20250219';
       }
       return model;
+    } else if (provider === "groq") {
+      // Allow Groq models
+      const allowedModels = [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-70b-versatile',
+        'llama-3.1-8b-instant',
+        'mixtral-8x7b-32768',
+        'gemma2-9b-it',
+        'gemma-7b-it'
+      ];
+      if (!allowedModels.includes(model)) {
+        console.warn(`Invalid Groq model specified: ${model}. Using default model: llama-3.3-70b-versatile`);
+        return 'llama-3.3-70b-versatile';
+      }
+      return model;
     }
     // Default fallback
     return model;
@@ -95,7 +117,7 @@ export class ConfigHelper extends EventEmitter {
         const config = JSON.parse(configData);
         
         // Ensure apiProvider is a valid value
-        if (config.apiProvider !== "openai" && config.apiProvider !== "gemini"  && config.apiProvider !== "anthropic") {
+        if (config.apiProvider !== "openai" && config.apiProvider !== "gemini"  && config.apiProvider !== "anthropic" && config.apiProvider !== "groq") {
           config.apiProvider = "gemini"; // Default to Gemini if invalid
         }
         
@@ -159,6 +181,9 @@ export class ConfigHelper extends EventEmitter {
         } else if (updates.apiKey.trim().startsWith('sk-ant-')) {
           provider = "anthropic";
           console.log("Auto-detected Anthropic API key format");
+        } else if (updates.apiKey.trim().startsWith('gsk_')) {
+          provider = "groq";
+          console.log("Auto-detected Groq API key format");
         } else {
           provider = "gemini";
           console.log("Using Gemini API key format (default)");
@@ -171,13 +196,17 @@ export class ConfigHelper extends EventEmitter {
       // If provider is changing, reset models to the default for that provider
       if (updates.apiProvider && updates.apiProvider !== currentConfig.apiProvider) {
         if (updates.apiProvider === "openai") {
-          updates.extractionModel = "gpt-4o";
-          updates.solutionModel = "gpt-4o";
-          updates.debuggingModel = "gpt-4o";
+          updates.extractionModel = "gpt-5.2";
+          updates.solutionModel = "gpt-5.2";
+          updates.debuggingModel = "gpt-5.2";
         } else if (updates.apiProvider === "anthropic") {
           updates.extractionModel = "claude-3-7-sonnet-20250219";
           updates.solutionModel = "claude-3-7-sonnet-20250219";
           updates.debuggingModel = "claude-3-7-sonnet-20250219";
+        } else if (updates.apiProvider === "groq") {
+          updates.extractionModel = "llama-3.3-70b-versatile";
+          updates.solutionModel = "llama-3.3-70b-versatile";
+          updates.debuggingModel = "llama-3.3-70b-versatile";
         } else {
           updates.extractionModel = "gemini-2.0-flash";
           updates.solutionModel = "gemini-2.0-flash";
@@ -225,7 +254,7 @@ export class ConfigHelper extends EventEmitter {
   /**
    * Validate the API key format
    */
-  public isValidApiKeyFormat(apiKey: string, provider?: "openai" | "gemini" | "anthropic" ): boolean {
+  public isValidApiKeyFormat(apiKey: string, provider?: "openai" | "gemini" | "anthropic" | "groq"): boolean {
     // If provider is not specified, attempt to auto-detect
     if (!provider) {
       if (apiKey.trim().startsWith('sk-')) {
@@ -234,6 +263,8 @@ export class ConfigHelper extends EventEmitter {
         } else {
           provider = "openai";
         }
+      } else if (apiKey.trim().startsWith('gsk_')) {
+        provider = "groq";
       } else {
         provider = "gemini";
       }
@@ -248,6 +279,9 @@ export class ConfigHelper extends EventEmitter {
     } else if (provider === "anthropic") {
       // Basic format validation for Anthropic API keys
       return /^sk-ant-[a-zA-Z0-9]{32,}$/.test(apiKey.trim());
+    } else if (provider === "groq") {
+      // Basic format validation for Groq API keys
+      return /^gsk_[a-zA-Z0-9]{32,}$/.test(apiKey.trim());
     }
     
     return false;
@@ -288,7 +322,7 @@ export class ConfigHelper extends EventEmitter {
   /**
    * Test API key with the selected provider
    */
-  public async testApiKey(apiKey: string, provider?: "openai" | "gemini" | "anthropic"): Promise<{valid: boolean, error?: string}> {
+  public async testApiKey(apiKey: string, provider?: "openai" | "gemini" | "anthropic" | "groq"): Promise<{valid: boolean, error?: string}> {
     // Auto-detect provider based on key format if not specified
     if (!provider) {
       if (apiKey.trim().startsWith('sk-')) {
@@ -299,6 +333,9 @@ export class ConfigHelper extends EventEmitter {
           provider = "openai";
           console.log("Auto-detected OpenAI API key format for testing");
         }
+      } else if (apiKey.trim().startsWith('gsk_')) {
+        provider = "groq";
+        console.log("Auto-detected Groq API key format for testing");
       } else {
         provider = "gemini";
         console.log("Using Gemini API key format for testing (default)");
@@ -311,6 +348,8 @@ export class ConfigHelper extends EventEmitter {
       return this.testGeminiKey(apiKey);
     } else if (provider === "anthropic") {
       return this.testAnthropicKey(apiKey);
+    } else if (provider === "groq") {
+      return this.testGroqKey(apiKey);
     }
     
     return { valid: false, error: "Unknown API provider" };
@@ -388,6 +427,38 @@ export class ConfigHelper extends EventEmitter {
       let errorMessage = 'Unknown error validating Anthropic API key';
       
       if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      return { valid: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Test Groq API key
+   */
+  private async testGroqKey(apiKey: string): Promise<{valid: boolean, error?: string}> {
+    try {
+      const groq = new OpenAI({ 
+        apiKey,
+        baseURL: "https://api.groq.com/openai/v1"
+      });
+      // Make a simple API call to test the key
+      await groq.models.list();
+      return { valid: true };
+    } catch (error: any) {
+      console.error('Groq API key test failed:', error);
+      
+      // Determine the specific error type for better error messages
+      let errorMessage = 'Unknown error validating Groq API key';
+      
+      if (error.status === 401) {
+        errorMessage = 'Invalid API key. Please check your Groq key and try again.';
+      } else if (error.status === 429) {
+        errorMessage = 'Rate limit exceeded. Your Groq API key has reached its request limit.';
+      } else if (error.status === 500) {
+        errorMessage = 'Groq server error. Please try again later.';
+      } else if (error.message) {
         errorMessage = `Error: ${error.message}`;
       }
       

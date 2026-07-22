@@ -1,4 +1,8 @@
 @echo off
+set "SILENT_MODE=0"
+if /I "%~1"=="/silent" set "SILENT_MODE=1"
+if /I "%~1"=="--silent" set "SILENT_MODE=1"
+
 echo === Interview Coder - Invisible Edition (No Paywall) ===
 echo.
 echo IMPORTANT: This app is designed to be INVISIBLE by default!
@@ -32,16 +36,47 @@ del /q .env 2>nul
 echo === Step 3: Building application... ===
 echo This may take a moment...
 call npm run build
+if errorlevel 1 (
+  echo.
+  echo Build failed. Fix the errors above and try again.
+  if "%SILENT_MODE%"=="1" exit /b 1
+  pause
+  exit /b 1
+)
 
 echo === Step 4: Launching in stealth mode... ===
 echo Remember: Press Ctrl+B to make it visible, Ctrl+[ and Ctrl+] to adjust opacity!
 echo.
+
 set NODE_ENV=production
-start /B cmd /c "npx electron ./dist-electron/main.js"
+set "ELECTRON_EXE=%~dp0node_modules\electron\dist\electron.exe"
+set "MAIN_JS=%~dp0dist-electron\main.js"
+
+if not exist "%ELECTRON_EXE%" (
+  echo ERROR: Electron not found. Run 'npm install' first.
+  if "%SILENT_MODE%"=="1" exit /b 1
+  pause
+  exit /b 1
+)
+
+if not exist "%MAIN_JS%" (
+  echo ERROR: Build output missing. Expected: %MAIN_JS%
+  if "%SILENT_MODE%"=="1" exit /b 1
+  pause
+  exit /b 1
+)
+
+rem Launch in a detached process so closing this terminal does NOT stop the app
+start "" /D "%~dp0" "%ELECTRON_EXE%" "%MAIN_JS%"
 
 echo App is now running invisibly! Press Ctrl+B to make it visible.
 echo.
-echo If you encounter any issues:
-echo 1. Make sure you've installed dependencies with 'npm install'
-echo 2. Press Ctrl+B multiple times to toggle visibility
-echo 3. Check Task Manager to verify the app is running
+echo You can safely CLOSE THIS TERMINAL - the app will keep running.
+echo To quit the app, use Ctrl+Q or end it from Task Manager.
+echo.
+echo Tip: Double-click stealth-run-silent.vbs to build and launch with no terminal window.
+echo.
+if "%SILENT_MODE%"=="1" exit /b 0
+echo This window will close in 5 seconds...
+timeout /t 5 /nobreak >nul
+exit

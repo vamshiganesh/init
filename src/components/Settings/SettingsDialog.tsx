@@ -13,7 +13,7 @@ import { Button } from "../ui/button";
 import { Settings } from "lucide-react";
 import { useToast } from "../../contexts/toast";
 
-type APIProvider = "openai" | "gemini" | "anthropic";
+type APIProvider = "openai" | "gemini" | "anthropic" | "groq";
 
 type AIModel = {
   id: string;
@@ -28,6 +28,7 @@ type ModelCategory = {
   openaiModels: AIModel[];
   geminiModels: AIModel[];
   anthropicModels: AIModel[];
+  groqModels: AIModel[];
 };
 
 // Define available models for each category
@@ -38,14 +39,34 @@ const modelCategories: ModelCategory[] = [
     description: 'Model used to analyze screenshots and extract problem details',
     openaiModels: [
       {
+        id: "gpt-5.2",
+        name: "GPT-5.2",
+        description: "Latest and most advanced model for problem extraction"
+      },
+      {
+        id: "gpt-5.1",
+        name: "GPT-5.1",
+        description: "Advanced model with enhanced capabilities"
+      },
+      {
+        id: "gpt-5.1-codex-max",
+        name: "GPT-5.1 Codex Max",
+        description: "Specialized for code understanding (uses Responses API)"
+      },
+      {
+        id: "gpt-5-mini",
+        name: "GPT-5 Mini",
+        description: "Fast and efficient for most tasks"
+      },
+      {
         id: "gpt-4o",
-        name: "gpt-4o",
-        description: "Best overall performance for problem extraction"
+        name: "GPT-4o",
+        description: "Proven performance for problem extraction"
       },
       {
         id: "gpt-4o-mini",
-        name: "gpt-4o-mini",
-        description: "Faster, more cost-effective option"
+        name: "GPT-4o Mini",
+        description: "Cost-effective GPT-4 option"
       }
     ],
     geminiModels: [
@@ -58,6 +79,26 @@ const modelCategories: ModelCategory[] = [
         id: "gemini-2.0-flash",
         name: "Gemini 2.0 Flash",
         description: "Faster, more cost-effective option"
+      },
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        description: "Latest fast model with improved performance"
+      },
+      {
+        id: "gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
+        description: "Latest pro model with advanced capabilities"
+      },
+      {
+        id: "gemini-3-pro",
+        name: "Gemini 3 Pro",
+        description: "Next-generation pro model with enhanced intelligence"
+      },
+      {
+        id: "gemma-3-27b",
+        name: "Gemma 3 27B",
+        description: "Large-scale open model for complex tasks"
       }
     ],
     anthropicModels: [
@@ -75,6 +116,38 @@ const modelCategories: ModelCategory[] = [
         id: "claude-3-opus-20240229",
         name: "Claude 3 Opus",
         description: "Top-level intelligence, fluency, and understanding"
+      }
+    ],
+    groqModels: [
+      {
+        id: "llama-3.3-70b-versatile",
+        name: "Llama 3.3 70B",
+        description: "Most capable Llama model for problem extraction"
+      },
+      {
+        id: "llama-3.1-70b-versatile",
+        name: "Llama 3.1 70B",
+        description: "High-performance versatile model"
+      },
+      {
+        id: "llama-3.1-8b-instant",
+        name: "Llama 3.1 8B",
+        description: "Fast and efficient for quick extraction"
+      },
+      {
+        id: "mixtral-8x7b-32768",
+        name: "Mixtral 8x7B",
+        description: "Excellent for multi-task processing"
+      },
+      {
+        id: "gemma2-9b-it",
+        name: "Gemma 2 9B",
+        description: "Google's instruction-tuned model"
+      },
+      {
+        id: "gemma-7b-it",
+        name: "Gemma 7B",
+        description: "Compact and efficient model"
       }
     ]
   },
@@ -84,14 +157,34 @@ const modelCategories: ModelCategory[] = [
     description: 'Model used to generate coding solutions',
     openaiModels: [
       {
+        id: "gpt-5.2",
+        name: "GPT-5.2",
+        description: "Best for complex coding solutions"
+      },
+      {
+        id: "gpt-5.1",
+        name: "GPT-5.1",
+        description: "Advanced coding with enhanced reasoning"
+      },
+      {
+        id: "gpt-5.1-codex-max",
+        name: "GPT-5.1 Codex Max",
+        description: "Optimized for code generation (uses Responses API)"
+      },
+      {
+        id: "gpt-5-mini",
+        name: "GPT-5 Mini",
+        description: "Fast, efficient code generation"
+      },
+      {
         id: "gpt-4o",
-        name: "gpt-4o",
+        name: "GPT-4o",
         description: "Strong overall performance for coding tasks"
       },
       {
         id: "gpt-4o-mini",
-        name: "gpt-4o-mini",
-        description: "Faster, more cost-effective option"
+        name: "GPT-4o Mini",
+        description: "Cost-effective coding assistance"
       }
     ],
     geminiModels: [
@@ -104,6 +197,26 @@ const modelCategories: ModelCategory[] = [
         id: "gemini-2.0-flash",
         name: "Gemini 2.0 Flash",
         description: "Faster, more cost-effective option"
+      },
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        description: "Latest fast model with improved performance"
+      },
+      {
+        id: "gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
+        description: "Latest pro model with advanced capabilities"
+      },
+      {
+        id: "gemini-3-pro",
+        name: "Gemini 3 Pro",
+        description: "Next-generation pro model with enhanced intelligence"
+      },
+      {
+        id: "gemma-3-27b",
+        name: "Gemma 3 27B",
+        description: "Large-scale open model for complex tasks"
       }
     ],
     anthropicModels: [
@@ -121,6 +234,38 @@ const modelCategories: ModelCategory[] = [
         id: "claude-3-opus-20240229",
         name: "Claude 3 Opus",
         description: "Top-level intelligence, fluency, and understanding"
+      }
+    ],
+    groqModels: [
+      {
+        id: "llama-3.3-70b-versatile",
+        name: "Llama 3.3 70B",
+        description: "Best for complex coding solutions"
+      },
+      {
+        id: "llama-3.1-70b-versatile",
+        name: "Llama 3.1 70B",
+        description: "Excellent code generation capabilities"
+      },
+      {
+        id: "llama-3.1-8b-instant",
+        name: "Llama 3.1 8B",
+        description: "Quick code generation for simpler tasks"
+      },
+      {
+        id: "mixtral-8x7b-32768",
+        name: "Mixtral 8x7B",
+        description: "Strong coding performance with large context"
+      },
+      {
+        id: "gemma2-9b-it",
+        name: "Gemma 2 9B",
+        description: "Good balance of speed and quality"
+      },
+      {
+        id: "gemma-7b-it",
+        name: "Gemma 7B",
+        description: "Fast coding assistance"
       }
     ]
   },
@@ -130,14 +275,34 @@ const modelCategories: ModelCategory[] = [
     description: 'Model used to debug and improve solutions',
     openaiModels: [
       {
+        id: "gpt-5.2",
+        name: "GPT-5.2",
+        description: "Superior debugging and error analysis"
+      },
+      {
+        id: "gpt-5.1",
+        name: "GPT-5.1",
+        description: "Advanced debugging with deep reasoning"
+      },
+      {
+        id: "gpt-5.1-codex-max",
+        name: "GPT-5.1 Codex Max",
+        description: "Expert at identifying bugs (uses Responses API)"
+      },
+      {
+        id: "gpt-5-mini",
+        name: "GPT-5 Mini",
+        description: "Fast debugging for common issues"
+      },
+      {
         id: "gpt-4o",
-        name: "gpt-4o",
-        description: "Best for analyzing code and error messages"
+        name: "GPT-4o",
+        description: "Reliable for analyzing code and error messages"
       },
       {
         id: "gpt-4o-mini",
-        name: "gpt-4o-mini",
-        description: "Faster, more cost-effective option"
+        name: "GPT-4o Mini",
+        description: "Cost-effective debugging"
       }
     ],
     geminiModels: [
@@ -150,6 +315,26 @@ const modelCategories: ModelCategory[] = [
         id: "gemini-2.0-flash",
         name: "Gemini 2.0 Flash",
         description: "Faster, more cost-effective option"
+      },
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        description: "Latest fast model with improved performance"
+      },
+      {
+        id: "gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
+        description: "Latest pro model with advanced capabilities"
+      },
+      {
+        id: "gemini-3-pro",
+        name: "Gemini 3 Pro",
+        description: "Next-generation pro model with enhanced intelligence"
+      },
+      {
+        id: "gemma-3-27b",
+        name: "Gemma 3 27B",
+        description: "Large-scale open model for complex tasks"
       }
     ],
     anthropicModels: [
@@ -167,6 +352,38 @@ const modelCategories: ModelCategory[] = [
         id: "claude-3-opus-20240229",
         name: "Claude 3 Opus",
         description: "Top-level intelligence, fluency, and understanding"
+      }
+    ],
+    groqModels: [
+      {
+        id: "llama-3.3-70b-versatile",
+        name: "Llama 3.3 70B",
+        description: "Excellent for debugging and error analysis"
+      },
+      {
+        id: "llama-3.1-70b-versatile",
+        name: "Llama 3.1 70B",
+        description: "Strong debugging capabilities"
+      },
+      {
+        id: "llama-3.1-8b-instant",
+        name: "Llama 3.1 8B",
+        description: "Fast debugging for common issues"
+      },
+      {
+        id: "mixtral-8x7b-32768",
+        name: "Mixtral 8x7B",
+        description: "Great at identifying code issues"
+      },
+      {
+        id: "gemma2-9b-it",
+        name: "Gemma 2 9B",
+        description: "Balanced debugging performance"
+      },
+      {
+        id: "gemma-7b-it",
+        name: "Gemma 7B",
+        description: "Quick error identification"
       }
     ]
   }
@@ -240,9 +457,9 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
     
     // Reset models to defaults when changing provider
     if (provider === "openai") {
-      setExtractionModel("gpt-4o");
-      setSolutionModel("gpt-4o");
-      setDebuggingModel("gpt-4o");
+      setExtractionModel("gpt-5.2");
+      setSolutionModel("gpt-5.2");
+      setDebuggingModel("gpt-5.2");
     } else if (provider === "gemini") {
       setExtractionModel("gemini-1.5-pro");
       setSolutionModel("gemini-1.5-pro");
@@ -251,6 +468,10 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
       setExtractionModel("claude-3-7-sonnet-20250219");
       setSolutionModel("claude-3-7-sonnet-20250219");
       setDebuggingModel("claude-3-7-sonnet-20250219");
+    } else if (provider === "groq") {
+      setExtractionModel("llama-3.3-70b-versatile");
+      setSolutionModel("llama-3.3-70b-versatile");
+      setDebuggingModel("llama-3.3-70b-versatile");
     }
   };
 
@@ -325,9 +546,9 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
           {/* API Provider Selection */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-white">API Provider</label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <div
-                className={`flex-1 p-2 rounded-lg cursor-pointer transition-colors ${
+                className={`p-2 rounded-lg cursor-pointer transition-colors ${
                   apiProvider === "openai"
                     ? "bg-white/10 border border-white/20"
                     : "bg-black/30 border border-white/5 hover:bg-white/5"
@@ -347,7 +568,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
                 </div>
               </div>
               <div
-                className={`flex-1 p-2 rounded-lg cursor-pointer transition-colors ${
+                className={`p-2 rounded-lg cursor-pointer transition-colors ${
                   apiProvider === "gemini"
                     ? "bg-white/10 border border-white/20"
                     : "bg-black/30 border border-white/5 hover:bg-white/5"
@@ -367,7 +588,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
                 </div>
               </div>
               <div
-                className={`flex-1 p-2 rounded-lg cursor-pointer transition-colors ${
+                className={`p-2 rounded-lg cursor-pointer transition-colors ${
                   apiProvider === "anthropic"
                     ? "bg-white/10 border border-white/20"
                     : "bg-black/30 border border-white/5 hover:bg-white/5"
@@ -386,6 +607,26 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
                   </div>
                 </div>
               </div>
+              <div
+                className={`p-2 rounded-lg cursor-pointer transition-colors ${
+                  apiProvider === "groq"
+                    ? "bg-white/10 border border-white/20"
+                    : "bg-black/30 border border-white/5 hover:bg-white/5"
+                }`}
+                onClick={() => handleProviderChange("groq")}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      apiProvider === "groq" ? "bg-white" : "bg-white/20"
+                    }`}
+                  />
+                  <div className="flex flex-col">
+                    <p className="font-medium text-white text-sm">Groq</p>
+                    <p className="text-xs text-white/60">Text-only (no vision)</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -393,6 +634,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
             <label className="text-sm font-medium text-white" htmlFor="apiKey">
             {apiProvider === "openai" ? "OpenAI API Key" : 
              apiProvider === "gemini" ? "Gemini API Key" : 
+             apiProvider === "groq" ? "Groq API Key" :
              "Anthropic API Key"}
             </label>
             <Input
@@ -403,6 +645,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
               placeholder={
                 apiProvider === "openai" ? "sk-..." : 
                 apiProvider === "gemini" ? "Enter your Gemini API key" :
+                apiProvider === "groq" ? "gsk_..." :
                 "sk-ant-..."
               }
               className="bg-black/50 border-white/10 text-white"
@@ -413,7 +656,12 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
               </p>
             )}
             <p className="text-xs text-white/50">
-              Your API key is stored locally and never sent to any server except {apiProvider === "openai" ? "OpenAI" : "Google"}
+              Your API key is stored locally and never sent to any server except {
+                apiProvider === "openai" ? "OpenAI" : 
+                apiProvider === "gemini" ? "Google" : 
+                apiProvider === "groq" ? "Groq" :
+                "Anthropic"
+              }
             </p>
             <div className="mt-2 p-2 rounded-md bg-white/5 border border-white/10">
               <p className="text-xs text-white/80 mb-1">Don't have an API key?</p>
@@ -441,6 +689,18 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
                   </p>
                   <p className="text-xs text-white/60">3. Create a new API key and paste it here</p>
                 </>
+              ) : apiProvider === "groq" ? (
+                <>
+                  <p className="text-xs text-white/60 mb-1">1. Create an account at <button 
+                    onClick={() => openExternalLink('https://console.groq.com/signup')} 
+                    className="text-blue-400 hover:underline cursor-pointer">Groq Console</button>
+                  </p>
+                  <p className="text-xs text-white/60 mb-1">2. Go to the <button 
+                    onClick={() => openExternalLink('https://console.groq.com/keys')} 
+                    className="text-blue-400 hover:underline cursor-pointer">API Keys</button> section
+                  </p>
+                  <p className="text-xs text-white/60">3. Create a new API key and paste it here</p>
+                </>
               ) : (
                 <>
                   <p className="text-xs text-white/60 mb-1">1. Create an account at <button 
@@ -455,6 +715,17 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
                 </>
               )}
             </div>
+            
+            {apiProvider === "groq" && (
+              <div className="mt-2 p-3 rounded-md bg-yellow-900/20 border border-yellow-600/30">
+                <p className="text-xs font-semibold text-yellow-400 mb-1">⚠️ Important Limitation</p>
+                <p className="text-xs text-yellow-200/80">
+                  Groq models (Llama, Mixtral, Gemma) are text-only and <strong>cannot analyze screenshots</strong>. 
+                  This app requires vision capabilities to extract problems from images. Please use OpenAI (GPT-4o), 
+                  Gemini, or Claude instead for full functionality.
+                </p>
+              </div>
+            )}
           </div>
           
           <div className="space-y-2 mt-4">
@@ -511,6 +782,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
               const models = 
                 apiProvider === "openai" ? category.openaiModels : 
                 apiProvider === "gemini" ? category.geminiModels :
+                apiProvider === "groq" ? category.groqModels :
                 category.anthropicModels;
               
               return (
