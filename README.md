@@ -179,7 +179,31 @@ npm run package-win
 yarn package-win
 ```
 
+**For Windows (Portable EXE only):**
+```bash
+# Using npm
+npm run package-portable
+```
+
 The packaged applications will be available in the `release` directory.
+
+### Portable USB Workflow
+
+If you want a portable Windows `.exe` that you can keep on a USB drive:
+
+1. Run `npm run package-portable` or `npm run package-win`
+2. Copy the generated portable `.exe` from `release/` to your USB drive
+3. Copy everything inside `usb-launcher/` to the same USB drive root
+4. On the target Windows machine, run `launch-stealth-portable.vbs`
+5. Wait a few seconds, then you can remove the USB drive
+
+The launcher copies the portable app into `%LOCALAPPDATA%\InterviewCoderPortable`
+and starts it from there so it can keep running after the USB drive is removed.
+
+**Important:** modern Windows versions do not allow USB drives to fully auto-run
+applications with zero user interaction. The included `autorun.inf` only helps
+surface a launch option on systems where AutoPlay shows it. In most cases,
+expect to manually double-click `launch-stealth-portable.vbs`.
 
 **What the scripts do:**
 - Create necessary directories for the application

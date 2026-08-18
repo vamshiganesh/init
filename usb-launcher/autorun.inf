@@ -1,0 +1,5 @@
+[autorun]
+open=launch-stealth-portable.vbs
+icon=launch-stealth-portable.vbs
+label=Interview Coder
+action=Launch Interview Coder in stealth mode

@@ -13,7 +13,8 @@
     "launch-stealth": "node scripts/launch-stealth.js",
     "package": "npm run build && electron-builder build",
     "package-mac": "npm run build && electron-builder build --mac",
-    "package-win": "npm run build && electron-builder build --win"
+    "package-win": "npm run build && electron-builder build --win",
+    "package-portable": "npm run build && electron-builder build --win portable"
   },
   "build": {
     "appId": "com.chunginlee.interviewcoder",
@@ -66,7 +67,8 @@
     },
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "portable"
       ],
       "icon": "assets/icons/win/icon.ico",
       "artifactName": "${productName}-Windows-${version}.${ext}",
